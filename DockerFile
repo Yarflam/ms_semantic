@@ -13,8 +13,18 @@ RUN pip install --upgrade pip
 # Installation de tensorflow-hub
 RUN pip install tensorflow-hub
 
+# Installation du connecteur MySQL
+RUN apt-get update && apt-get install -y --no-install-recommends libmysqlclient-dev
+RUN pip install mysql-connector
+
 # Lancement de Python
-RUN echo "#!/bin/bash\n" > /home/endpoint.sh
-RUN echo "cd /notebooks/semantic\n" >> /home/endpoint.sh
-RUN echo "python main.py\n" >> /home/endpoint.sh
+RUN echo "#!/bin/bash" > /home/pysemantic.sh &&\
+	echo "cd /notebooks/semantic" >> /home/pysemantic.sh &&\
+	echo "python main.py" >> /home/pysemantic.sh
+
+RUN echo "#!/bin/bash" > /home/endpoint.sh &&\
+	echo "while [[ 1 ]]; do" >> /home/endpoint.sh &&\
+	echo "sleep 10" >> /home/endpoint.sh &&\
+	echo "done" >> /home/endpoint.sh
+
 CMD [ "/bin/bash", "/home/endpoint.sh" ]

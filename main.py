@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow_hub as hub
 import matplotlib.pyplot as plt
+import mysql.connector as mariadb
 # import seaborn as sns
 # import pandas as pd
 import numpy as np
@@ -22,18 +23,25 @@ def getConfig ():
 		json = JSON.loads(data)
 	return json
 
-# Calculate the semantic
-def getSemantic (words):
-	embed = hub.Module("https://tfhub.dev/google/universal-sentence-encoder/1")
-	embeddings = embed(words)
-	return session.run(embeddings)
-
 # Main App
 def main ():
 	# Get the configuration
 	config = getConfig()
-	# Test semantic
-	print(getSemantic(['poisson','velo','mer','bateau']))
+
+	# Connect to MariaDb
+	mysql_config = config['mysql']
+	mysql_con = mariadb.connect(
+		host = mysql_config['host'],
+		user = mysql_config['user'],
+		password = mysql_config['pass'],
+		database = mysql_config['database'])
+	dbHandler = mysql_con.cursor()
+	dbHandler.execute('SHOW TABLES')
+	result = dbHandler.fetchAll()
+	for item in result:
+		print(item)
+
+	print('End')
 
 # Auto start
 if __name__ == "__main__":
