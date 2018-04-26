@@ -1,0 +1,20 @@
+FROM tensorflow/tensorflow:latest-py3
+MAINTAINER Pili
+
+# Installation des dépendances standards
+RUN apt-get update && apt-get install -y --no-install-recommends curl wget nano apt-transport-https lsb-release ca-certificates
+
+# Installation de TK
+RUN apt-get install -y --no-install-recommends python3-tk
+
+# Mise à jour de pip
+RUN pip install --upgrade pip
+
+# Installation de tensorflow-hub
+RUN pip install tensorflow-hub
+
+# Lancement de Python
+RUN echo "#!/bin/bash\n" > /home/endpoint.sh
+RUN echo "cd /notebooks/semantic\n" >> /home/endpoint.sh
+RUN echo "python main.py\n" >> /home/endpoint.sh
+CMD [ "/bin/bash", "/home/endpoint.sh" ]
