@@ -33,7 +33,7 @@ ENV LANGUAGE=en_CA.UTF-8
 RUN echo "#!/bin/bash" > /home/pysemantic.sh &&\
 	echo "export LANG=en_US.UTF-8" >> /home/pysemantic.sh &&\
 	echo "cd /notebooks/semantic" >> /home/pysemantic.sh &&\
-	echo "python main.py" >> /home/pysemantic.sh
+	echo "python -u main.py" >> /home/pysemantic.sh
 
 RUN echo "#!/bin/bash" > /home/endpoint.sh &&\
 	echo "while [[ 1 ]]; do" >> /home/endpoint.sh &&\
