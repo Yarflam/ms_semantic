@@ -103,4 +103,8 @@ venv.bak/
 # Ignore the configuration
 config.json
 
+# Ignore the models
+models/*
+!models/.gitkeep
+
 # End of https://www.gitignore.io/api/python

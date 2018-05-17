@@ -1,26 +1,26 @@
 FROM tensorflow/tensorflow:latest-py3
 MAINTAINER Pili
 
-# Installation des dépendances standards
+# Install standards dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends curl wget nano apt-transport-https lsb-release ca-certificates
 
-# Installation de TK
+# Install TK
 RUN apt-get install -y --no-install-recommends python3-tk
 
-# Mise à jour de pip
+# Upgrade PIP
 RUN pip install --upgrade pip
 
-# Installation de tensorflow-hub
+# Install Tensorflow Hub
 RUN pip install tensorflow-hub
 
-# Installation du connecteur MySQL
+# Install the MySQL connector
 RUN apt-get update && apt-get install -y --no-install-recommends libmysqlclient-dev
 RUN pip install mysql-connector
 
-# Installation du connecteur MongoDb
+# Install the MongoDb connector
 RUN pip install pymongo
 
-# Installation du pack fr
+# Install french pack
 RUN apt-get install -y --no-install-recommends locales &&\
     locale-gen en_CA.UTF-8 &&\
     echo "environment=LANG=\"es_ES.utf8\", LC_ALL=\"es_ES.UTF-8\", LC_LANG=\"es_ES.UTF-8\"" > /etc/default/locale
@@ -29,11 +29,14 @@ ENV LC_ALL=en_CA.UTF-8
 ENV LANG=en_CA.UTF-8
 ENV LANGUAGE=en_CA.UTF-8
 
-# Installation de Word2vec
+# Install Word2vec
 RUN pip install cython
 RUN pip install word2vec
 
-# Lancement de Python
+# Install Gensim
+RUN pip install gensim
+
+# Launcher python script
 RUN echo "#!/bin/bash" > /home/pysemantic.sh &&\
     echo "export LANG=en_US.UTF-8" >> /home/pysemantic.sh &&\
     echo "cd /notebooks/semantic" >> /home/pysemantic.sh &&\

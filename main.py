@@ -4,19 +4,33 @@
 ################
 # import seaborn as sns
 # import pandas as pd
+
+# Semantic Fields
 import word2vec
+from gensim.models import KeyedVectors
+
+# Machine Learning
 import tensorflow as tf
 import tensorflow_hub as hub
+
+# Graphic Tools
 import matplotlib.pyplot as plt
+
+# DB Connectors
 import mysql.connector as mariadb
 from pymongo import MongoClient
+
+# Utilities
 from bson.objectid import ObjectId
+import urllib.request
 import numpy as np
 import json as JSON
+import time
 import re
 import os
 
 CONFIG_FILE = "config.json"
+MODELS_FOLDER = './models/'
 
 # TF ignore the standards errors
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -87,6 +101,48 @@ def getLastSpiderResults (mongodb_client, n=10):
         output.append(doc)
     return output
 
+##################
+# Models Helpers #
+##################
+
+def getFrWiki2Vec (binName):
+    binSource = 'http://embeddings.org/'
+    # Download
+    if not os.path.exists('%s%s' % (MODELS_FOLDER, binName)):
+        print('* Downloading %s%s' % (binSource, binName))
+        with urllib.request.urlopen('%s%s' % (binSource, binName)) as http:
+            binData = http.read()
+            if len(binData):
+                with open('%s%s' % (MODELS_FOLDER, binName), 'wb') as file:
+                    file.write(binData)
+            else:
+                raise ValueError('The data file ')
+            del binData
+    # Load the binary with Gensim (it's most efficient than Word2vec library)
+    return KeyedVectors.load_word2vec_format('%s%s' % (MODELS_FOLDER, binName), binary=True)
+
+def checkWordsInModel (word, model):
+    return True if word in model.wv.vocab else False
+
+def wordsToVect (words, model):
+    vectors = []
+    if type(words) is str: words = words.split()
+    if type(words) is not list: return vectors
+    # For each words
+    i = 0
+    while i < len(words):
+        w = words[i]
+        if type(w) is str:
+            if chr(32) in w:
+                # If we have a sentence : split and continue
+                words += w.split()
+            else:
+                # If the word is in the model
+                if checkWordsInModel(w, model):
+                    vectors.append( np.array(model.get_vector(w)) )
+        i += 1
+    return vectors
+
 ############
 # Main App #
 ############
@@ -94,6 +150,8 @@ def main ():
     # Sets
     tfs_name, tfs_version = 'nnlm-en-dim128', 1
     # tfs_name = 'universal-sentence-encoder'
+    # wcbdd_name = 'frWac_no_postag_no_phrase_700_skip_cut50.bin';
+    wcbdd_name = 'frWiki_no_lem_no_postag_no_phrase_1000_cbow_cut100.bin'
 
     # Get the configuration
     config = getConfig()
@@ -106,34 +164,17 @@ def main ():
     print('* Connecting to MongoDb')
     # mongodb_client = getClientMongoDb(config['mongodb'])
 
-    # Initialize Tensorflow Hub
-    print('* Load TensorflowHub.%s' % tfs_name)
-    embed = hub.Module("https://tfhub.dev/google/%s/%s" % (tfs_name, tfs_version))
+    # Initialize Word2vec with French Data Model
+    print('* Loading Word2vec')
+    ts_begin = time.time()
+    model = getFrWiki2Vec(wcbdd_name)
+    print('* Word2vec is loaded ('+str(int(time.time() - ts_begin))+' s)')
 
-    # features = {
-    #     'sentences': np.array([
-    #         ['The', 'fish', 'swimming', 'in', 'the', 'water'],
-    #         ['Sea', 'is', 'beautiful', '', '', '']
-    #     ])
-    # }
-    #
-    # embeddings = embed(tf.reshape(features["sentences"], shape=[-1]))
+    sentence = wordsToVect('une baleine dans la mer bleue', model);
+    print(sentence, len(sentence))
 
-    words = ['cat', 'dog', 'fish']
-
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        sess.run(tf.tables_initializer())
-
-        embeddings = sess.run(embed(words))
-        print(embeddings)
-
-        for i, embeddings in enumerate(np.array(embeddings).tolist()):
-            print("Message: {}".format(words[i]))
-            print("Embedding size: {}".format(len(embeddings)))
-            embeddings_snippet = ", ".join(
-                (str(x) for x in embeddings[:3]))
-            print("Embedding: [{}, ...]\n".format(embeddings_snippet))
+    sim = model.similar_by_vector(sentence[1])
+    print(sim)
 
     return True
 
