@@ -1,16 +1,16 @@
 {
-	"mongodb": {
-		"host": "host.com",
-		"port": 27017,
-		"user": "root",
-		"pass": "",
-		"base": ""
-	},
-	"mysql": {
-		"host": "host.com",
-		"port": 3306,
-		"user": "root",
-		"pass": "",
-		"base": ""
-	}
+    "mongodb": {
+        "host": "host.com",
+        "port": 27017,
+        "user": "root",
+        "pass": "",
+        "base": ""
+    },
+    "mysql": {
+        "host": "host.com",
+        "port": 3306,
+        "user": "root",
+        "pass": "",
+        "base": ""
+    }
 }

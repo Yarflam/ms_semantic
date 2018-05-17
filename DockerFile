@@ -22,22 +22,26 @@ RUN pip install pymongo
 
 # Installation du pack fr
 RUN apt-get install -y --no-install-recommends locales &&\
-	locale-gen en_CA.UTF-8 &&\
-	echo "environment=LANG=\"es_ES.utf8\", LC_ALL=\"es_ES.UTF-8\", LC_LANG=\"es_ES.UTF-8\"" > /etc/default/locale
+    locale-gen en_CA.UTF-8 &&\
+    echo "environment=LANG=\"es_ES.utf8\", LC_ALL=\"es_ES.UTF-8\", LC_LANG=\"es_ES.UTF-8\"" > /etc/default/locale
 RUN chmod 0755 /etc/default/locale
 ENV LC_ALL=en_CA.UTF-8
 ENV LANG=en_CA.UTF-8
 ENV LANGUAGE=en_CA.UTF-8
 
+# Installation de Word2vec
+RUN pip install cython
+RUN pip install word2vec
+
 # Lancement de Python
 RUN echo "#!/bin/bash" > /home/pysemantic.sh &&\
-	echo "export LANG=en_US.UTF-8" >> /home/pysemantic.sh &&\
-	echo "cd /notebooks/semantic" >> /home/pysemantic.sh &&\
-	echo "python -u main.py" >> /home/pysemantic.sh
+    echo "export LANG=en_US.UTF-8" >> /home/pysemantic.sh &&\
+    echo "cd /notebooks/semantic" >> /home/pysemantic.sh &&\
+    echo "python -u main.py" >> /home/pysemantic.sh
 
 RUN echo "#!/bin/bash" > /home/endpoint.sh &&\
-	echo "while [[ 1 ]]; do" >> /home/endpoint.sh &&\
-	echo "sleep 10" >> /home/endpoint.sh &&\
-	echo "done" >> /home/endpoint.sh
+    echo "while [[ 1 ]]; do" >> /home/endpoint.sh &&\
+    echo "sleep 10" >> /home/endpoint.sh &&\
+    echo "done" >> /home/endpoint.sh
 
 CMD [ "/bin/bash", "/home/endpoint.sh" ]
