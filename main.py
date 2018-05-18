@@ -21,6 +21,7 @@ import mysql.connector as mariadb
 from pymongo import MongoClient
 
 # Utilities
+from urllib.parse import urlparse
 import urllib.request
 import numpy as np
 import json as JSON
@@ -145,21 +146,32 @@ def getClientMongoDb (args):
 # DB Request #
 ##############
 
-def queryMariaDb (mysql_client, request):
+def queryMariaDb (mysql_client, request, op_fetchall=True):
     dbHandle = mysql_client.cursor()
     dbHandle.execute(request)
-    return dbHandle.fetchall()
+    return dbHandle.fetchall() if op_fetchall else True
 
 ##########################
 # Specific Data Endpoint #
 ##########################
 
-def getLastSpiderResults (mongodb_client, n=10):
+def getMongoLastSpiderResults (mongodb_client, n=10):
     output = []
     cursor = mongodb_client.admin.spider_results.find({'ms_semantic': False}).limit(n)
     for doc in cursor:
         output.append(doc)
     return output
+
+def setMongoMsSemantic (mongodb_client, doc):
+    doc['ms_semantic'] = True
+    mongodb_client.admin.spider_results.update({'_id': doc['_id']}, doc)
+
+def setMySQLThemeWebsite (mysql_client, url, theme):
+    extract = urlparse(url)
+    req = queryMariaDb(mysql_client, 'SELECT id FROM WEBSITE WHERE url = "%s"' % extract.netloc)
+    # if not len(req):
+    #     queryMariaDb(mysql_client, 'INSERT INTO WEBSITE ')
+    # print(req)
 
 ##################
 # Models Helpers #
@@ -253,8 +265,7 @@ def getBetterLabel (features, labels, model):
             if dist < min:
                 j, min = i, dist
         return labels[j]
-    else:
-        return ''
+    else: return ''
 
 # Combine all predictables labels and get the better
 def vectToBetterLabel (vector, labels, model):
@@ -273,6 +284,25 @@ def vectToBetterLabel (vector, labels, model):
     keys, values = bubbleSort(keys, values, False)
     return keys[0]
 
+# Return the main topic / theme
+def getTheme (words, labels, model):
+    # Analyze the Words' length
+    keys, values = [], []
+    for w in words:
+        wlen = len(w)
+        if not wlen in keys:
+            keys.append(wlen)
+            values.append([])
+        values[keys.index(wlen)].append(w)
+    values, keys = bubbleSort(values, keys, False)
+    # Limit 250 words
+    words, lwords = [], 100
+    for i in range(0, len(keys)):
+        words += values[i][:lwords-len(words)]
+        if len(words) >= lwords: break
+    # Return the better word
+    return getBetterLabel(words, labels, model)
+
 ############
 # Main App #
 ############
@@ -288,11 +318,11 @@ def main ():
 
     # Connect to MariaDb
     print('* Connecting to MariaDb')
-    # mysql_client = getClientMariaDb(config['mysql'])
+    mysql_client = getClientMariaDb(config['mysql'])
 
     # Connect to MongoDb
     print('* Connecting to MongoDb')
-    # mongodb_client = getClientMongoDb(config['mongodb'])
+    mongodb_client = getClientMongoDb(config['mongodb'])
 
     # Initialize Word2vec with French Data Model
     print('* Loading Word2vec')
@@ -303,21 +333,13 @@ def main ():
     # Get the labels
     print('* Get the labels')
     labels = getLabels(model)
-    print('->', labels)
-
-    # Test
-    items = [
-        {
-            'html': getUrlPage('https://www.onedayonetravel.com/blog-voyage-voyage-en-thailande/').decode()
-        }
-    ]
 
     # Begin the treatment
     print('* Get the last documents')
-    # items = getLastSpiderResults(mongodb_client, 1)
-    if len(items):
+    items = getMongoLastSpiderResults(mongodb_client, 1)
+    for item in items:
         # Get the fist document
-        html = items[0]['html']
+        html = item['html']
         # Get the words
         i, words = 0, list(set(cleanString(html).lower().split()))
         # Extract the exists words
@@ -325,10 +347,12 @@ def main ():
             if not checkWordInModel(words[i], model):
                 words = words[0:i] + words[i+1:]
             else: i += 1
-        print(words)
         # Extract the theme
-        theme = getBetterLabel(words, labels, model)
-        print(theme)
+        theme = getTheme(words, labels, model)
+        # Update MongoDb
+        # setMongoMsSemantic(mongodb_client, item)
+        # Update MySQL
+        setMySQLThemeWebsite(mysql_client, item['link'], theme)
 
     print('End')
 

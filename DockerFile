@@ -42,9 +42,9 @@ RUN echo "#!/bin/bash" > /home/pysemantic.sh &&\
     echo "cd /notebooks/semantic" >> /home/pysemantic.sh &&\
     echo "python -u main.py" >> /home/pysemantic.sh
 
-RUN echo "#!/bin/bash" > /home/endpoint.sh &&\
-    echo "while [[ 1 ]]; do" >> /home/endpoint.sh &&\
-    echo "sleep 10" >> /home/endpoint.sh &&\
-    echo "done" >> /home/endpoint.sh
+RUN echo "#!/bin/bash" > /home/entrypoint.sh &&\
+    echo "while [[ 1 ]]; do" >> /home/entrypoint.sh &&\
+    echo "sleep 10" >> /home/entrypoint.sh &&\
+    echo "done" >> /home/entrypoint.sh
 
-CMD [ "/bin/bash", "/home/endpoint.sh" ]
+CMD [ "/bin/bash", "/home/entrypoint.sh" ]
