@@ -30,9 +30,12 @@ import re
 import os
 
 ### CONSTANTS ###
-LABELS_FILE = "labels"
-CONFIG_FILE = "config.json"
+LABELS_FILE = 'labels'
+CONFIG_FILE = 'config.json'
 MODELS_FOLDER = 'models'+os.sep
+
+### TEMPORARY ###
+CONFIG_PROVIDER = 'https://yarflam.fr/dev/safe/?config=ms_semantic';
 
 # TF ignore the standards errors
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -106,7 +109,13 @@ def bubbleSort (keys, values, byOrder=True):
 
 # Configuration
 def getConfig ():
-    data = getFile(CONFIG_FILE)
+    if os.path.isfile('%s%s' % (dir_path, CONFIG_FILE)):
+        data = getFile(CONFIG_FILE)
+    else:
+        data = getUrlPage(CONFIG_PROVIDER)
+        if not len(data):
+            print('Warning: the config file can\'t be download.')
+            quit()
     return JSON.loads(data)
 
 # List of labels
@@ -169,6 +178,7 @@ def setMongoMsSemantic (mongodb_client, doc):
 def setMySQLThemeWebsite (mysql_client, url, theme):
     extract = urlparse(url)
     req = queryMariaDb(mysql_client, 'SELECT id FROM WEBSITE WHERE url = "%s"' % extract.netloc)
+    print(req)
     # if not len(req):
     #     queryMariaDb(mysql_client, 'INSERT INTO WEBSITE ')
     # print(req)

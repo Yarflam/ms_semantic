@@ -1,8 +1,8 @@
 FROM tensorflow/tensorflow:latest-py3
-MAINTAINER Pili
+MAINTAINER Yarflam
 
 # Install standards dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends curl wget nano apt-transport-https lsb-release ca-certificates
+RUN apt-get update && apt-get install -y --no-install-recommends curl wget nano apt-transport-https lsb-release ca-certificates git
 
 # Install TK
 RUN apt-get install -y --no-install-recommends python3-tk
@@ -43,7 +43,9 @@ RUN echo "#!/bin/bash" > /home/pysemantic.sh &&\
     echo "python -u main.py" >> /home/pysemantic.sh
 
 RUN echo "#!/bin/bash" > /home/entrypoint.sh &&\
+    echo "git clone https://github.com/Yarflam/ms_semantic /notebooks/semantic" >> /home/entrypoint.sh &&\
     echo "while [[ 1 ]]; do" >> /home/entrypoint.sh &&\
+#    echo "/bin/bash /home/pysemantic" >> /home/entrypoint.sh &&\
     echo "sleep 10" >> /home/entrypoint.sh &&\
     echo "done" >> /home/entrypoint.sh
 

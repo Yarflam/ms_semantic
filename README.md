@@ -2,7 +2,7 @@
 
 Middle Service -  Semantic Analyzer for the project SEO.
 
-## Prerequired
+## Prerequisite
 
 You need a Docker environment to use it and two databases, MongoDB and MySQL.
 
@@ -26,11 +26,11 @@ It's run !
 
 ## How can I improve it ?
 
-Simple, you have to remove the endpoint in the docker-compose file and restart it.
+Simple, you have to remove the line "/bin/bash /home/pysemantic" in the entrypoint.
 
 If you wan't to debugging the python script :
 
-> $ docker exec pysemantic bash /home/pysemantic.sh
+> $ docker exec pysemantic /bin/bash /home/pysemantic.sh
 
 ## How can I offer you a coffee ?
 

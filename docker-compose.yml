@@ -6,7 +6,5 @@ services:
     image: pysemantic
     container_name: pysemantic
     privileged: false
-    volumes:
-      - ./:/notebooks/semantic
     stdin_open: true
     tty: true
