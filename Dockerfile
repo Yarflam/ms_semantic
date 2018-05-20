@@ -45,7 +45,7 @@ RUN echo "#!/bin/bash" > /home/pysemantic.sh &&\
 RUN echo "#!/bin/bash" > /home/entrypoint.sh &&\
     echo "git clone https://github.com/Yarflam/ms_semantic /notebooks/semantic" >> /home/entrypoint.sh &&\
     echo "while [[ 1 ]]; do" >> /home/entrypoint.sh &&\
-#    echo "/bin/bash /home/pysemantic" >> /home/entrypoint.sh &&\
+    echo "/bin/bash /home/pysemantic" >> /home/entrypoint.sh &&\
     echo "sleep 10" >> /home/entrypoint.sh &&\
     echo "done" >> /home/entrypoint.sh
 
