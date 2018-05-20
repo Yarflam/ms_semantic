@@ -112,7 +112,7 @@ def getConfig ():
     if os.path.isfile('%s%s' % (dir_path, CONFIG_FILE)):
         data = getFile(CONFIG_FILE)
     else:
-        data = getUrlPage(CONFIG_PROVIDER)
+        data = getUrlPage(CONFIG_PROVIDER).decode()
         if not len(data):
             print('Warning: the config file can\'t be download.')
             quit()
@@ -178,10 +178,13 @@ def setMongoMsSemantic (mongodb_client, doc):
 def setMySQLThemeWebsite (mysql_client, url, theme):
     extract = urlparse(url)
     req = queryMariaDb(mysql_client, 'SELECT id FROM WEBSITE WHERE url = "%s"' % extract.netloc)
-    print(req)
-    # if not len(req):
-    #     queryMariaDb(mysql_client, 'INSERT INTO WEBSITE ')
-    # print(req)
+    if len(req):
+        # New entry
+        queryMariaDb(mysql_client, 'UPDATE WEBSITE SET theme = "%s" WHERE url = "%s"' % (theme, extract.netloc))
+    else:
+        # Update the field
+        queryMariaDb(mysql_client, 'INSERT INTO WEBSITE (theme,url) VALUES ("%s","%s")' % (theme, extract.netloc))
+
 
 ##################
 # Models Helpers #
@@ -346,23 +349,26 @@ def main ():
 
     # Begin the treatment
     print('* Get the last documents')
-    items = getMongoLastSpiderResults(mongodb_client, 1)
-    for item in items:
-        # Get the fist document
-        html = item['html']
-        # Get the words
-        i, words = 0, list(set(cleanString(html).lower().split()))
-        # Extract the exists words
-        while i < len(words):
-            if not checkWordInModel(words[i], model):
-                words = words[0:i] + words[i+1:]
-            else: i += 1
-        # Extract the theme
-        theme = getTheme(words, labels, model)
-        # Update MongoDb
-        # setMongoMsSemantic(mongodb_client, item)
-        # Update MySQL
-        setMySQLThemeWebsite(mysql_client, item['link'], theme)
+    while 1:
+        items = getMongoLastSpiderResults(mongodb_client, 10)
+        for item in items:
+            # Get the fist document
+            html = item['html']
+            # Get the words
+            i, words = 0, list(set(cleanString(html).lower().split()))
+            # Extract the exists words
+            while i < len(words):
+                if not checkWordInModel(words[i], model):
+                    words = words[0:i] + words[i+1:]
+                else: i += 1
+            # Extract the theme
+            theme = getTheme(words, labels, model)
+            # Update MongoDb
+            setMongoMsSemantic(mongodb_client, item)
+            # Update MySQL
+            setMySQLThemeWebsite(mysql_client, item['link'], theme)
+            # Output
+            print('> %s (theme: %s)' % (item['link'], theme))
 
     print('End')
 
